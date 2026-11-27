@@ -1,36 +1,82 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Today Trends — Monitor de Series y Películas en Streaming
 
-## Getting Started
+Aplicación estilo **Netflix** para monitorear constantemente qué está en tendencia, qué es lo más visto en tiempo real y qué es lo mejor valorado en **Netflix, Amazon Prime Video, Max (HBO), Disney+, Paramount+, Peacock y Apple TV+** — sin alojar ni reproducir video ilegal, solo carátulas, sinopsis, calificaciones y disponibilidad.
 
-First, run the development server:
+Diseñada para funcionar desde el mismo repositorio en:
+- **Web / Vercel** (PC, móvil, tablet)
+- **Fire TV / Android TV** (navegación completa con control remoto D-Pad: flechas, OK/Enter, Atrás/Escape)
+
+---
+
+## 1. Fuentes de datos que utiliza
+
+1. **TMDB API (Gratis):** Tendencias diarias/semanales, rankings por plataforma (`Netflix`, `Prime Video`, `Max`, `Disney+`, `Paramount+`, `Peacock`, `Apple TV+`), mejores valoradas, géneros, sinopsis en español latino (`es-MX`), pósters HD, reparto y tráilers de YouTube.
+2. **Trakt.tv API (Gratis, opcional):** Conteo de personas viendo en tiempo real (*Trakt Live*) y *Más vistas de todos los tiempos*.
+3. **Modo Demo automático:** Si aún no configuras tus API keys, la app funciona inmediatamente con un catálogo de demostración.
+
+---
+
+## 2. Configuración local
+
+```bash
+npm install
+cp .env.example .env.local
+```
+
+Edita `.env.local` y agrega tus claves gratuitas:
+- **TMDB API Key:** [themoviedb.org/settings/api](https://www.themoviedb.org/settings/api)
+- **Trakt Client ID (opcional):** [trakt.tv/oauth/applications](https://trakt.tv/oauth/applications)
+
+Inicia en modo desarrollo:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 3. Subir a GitHub y hacer Deploy en Vercel
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Sube el proyecto a tu repositorio en GitHub:
+   ```bash
+   git add .
+   git commit -m "Initial Today Trends app"
+   git branch -M main
+   git remote add origin https://github.com/TU_USUARIO/today-trends.git
+   git push -u origin main
+   ```
+2. Entra a [vercel.com](https://vercel.com), importa el repositorio y en **Environment Variables** agrega:
+   - `TMDB_API_KEY` (o `TMDB_READ_ACCESS_TOKEN`)
+   - `TRAKT_CLIENT_ID` (opcional)
+   - `DEFAULT_REGION=US`
+   - `DEFAULT_LANGUAGE=es-MX`
+3. Haz clic en **Deploy**. Tu app quedará en línea y actualizando tendencias automáticamente.
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## 4. Compilar como App (.apk) para Fire TV
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Fire TV corre **Fire OS** (basado en Android). Para generar un `.apk` que cargue tu app de Vercel con soporte de control remoto:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Instala Capacitor Android:
+   ```bash
+   npm install @capacitor/core @capacitor/cli @capacitor/android
+   npx cap add android
+   ```
+2. Edita `capacitor.config.ts` y coloca tu URL real de Vercel en `server.url` (o define `CAPACITOR_SERVER_URL=https://tu-app.vercel.app`).
+3. Para que aparezca en la pantalla de inicio de Fire TV, agrega en `android/app/src/main/AndroidManifest.xml`:
+   - Dentro de `<manifest>`:
+     ```xml
+     <uses-feature android:name="android.software.leanback" android:required="false" />
+     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
+     ```
+   - Dentro del `<intent-filter>` de `MainActivity`:
+     ```xml
+     <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+     ```
+4. Sincroniza y compila el APK:
+   ```bash
+   npx cap sync android
+   cd android && ./gradlew assembleRelease
+   ```
+5. Instala el APK en tu Fire TV usando **ADB** (`adb connect IP_DEL_FIRE_TV && adb install app-release.apk`) o la app **Downloader** en el Fire TV.
